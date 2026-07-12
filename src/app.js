@@ -1,15 +1,25 @@
 const express = require("express");
 const connectdb = require("./config/database")
+const User = require("./models/user")
 
 const app = express();
-app.use((req,res)=>{
-    res.send("hello this is my first ");
+app.post("/signup",async (req,res)=>{
+    const user = new User({
+        firstName :"virat",
+        lastName :"kholi",
+        emailId :"virat@gmail.com",
+        password:"virat@123",
+        gender:"male"
+    })
+    await user.save();
+    res.send("data succefully save ");
+
 })
 connectdb().then(()=>{
     console.log("database connect succefuly")
-    app.listen(3000,()=>{
+    app.listen(7777,()=>{
         console.log("server is listing ");
     })
-    }).catch(error =>{
+    }).catch((error) =>{
     console.log("error");
     })
