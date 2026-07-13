@@ -1,4 +1,6 @@
+require("dotenv").config();
 const express = require("express");
+
 const connectdb = require("./config/database")
 const User = require("./models/user");
 
@@ -78,11 +80,14 @@ app.patch("/user", async (req, res) => {
         res.status(500).send(error.message)
     }
 })
+const PORT = process.env.PORT;
+
 connectdb().then(() => {
-    console.log("database connect succefuly")
-    app.listen(7777, () => {
-        console.log("server is listing ");
-    })
+    console.log("Database connected successfully");
+
+    app.listen(PORT, () => {
+        console.log(`Server is listening on port ${PORT}`);
+    });
 }).catch((error) => {
-    console.log("error.message)");
-})
+    console.log(error.message);
+});
