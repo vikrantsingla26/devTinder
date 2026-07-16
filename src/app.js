@@ -4,9 +4,14 @@ const {validateSignUpData} = require("./utils/validation")
 const connectdb = require("./config/database")
 const User = require("./models/user");
 const bcrypt = require("bcrypt")
+const cookieParser = require("cookie-parser")
+const jwt = require("jsonwebtoken");
+const {userAuth} = require("./middleware/auth")
+
 
 const app = express();
 app.use(express.json())
+app.use(cookieParser())
 app.post("/signup", async (req, res) => {
 
     try {
@@ -45,73 +50,23 @@ app.post("/login", async (req, res) => {
         if (!isPasswordValid) {
             return res.status(400).send("Invalid email or password");
         }
-
+        const token = await jwt.sign({_id:user._id},  process.env.JWT_SECRET)
+res.cookie("token",token)
         res.send("Login successfully");
     } catch (error) {
         res.status(500).send(error.message);
     }
 });
-app.get("/user", async (req, res) => {
+app.get("/profile",userAuth, async (req, res) => {
     try {
-        const email = req.body.emailId;
-
-        const user = await User.find({ emailId: email });
-
-        if (user.length === 0) {
-            return res.status(404).send("User not found");
-        }
-
+        
+        const user = req.user;
         res.send(user);
     } catch (error) {
-        res.status(500).send(error.message);
+        res.status(401).send(error.message);
     }
 });
-app.get("/feed", async (req, res) => {
-    try {
-        const user = await User.find({});
-        res.send(user)
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-})
-app.delete("/delete", async (req, res) => {
-    try {
-        const userId = req.body.userId;
-        const user = await User.findByIdAndDelete(userId)
-        res.send(user);
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
 
-})
-app.patch("/user", async (req, res) => {
-    try {
-        const userId = req.body.userId
-        const data = req.body
-        const allowedupdate = ["userId","skills","password","age","firstName","lastName","photoUrl"]
-        const isallowed = Object.keys(data).every((k)=>{
-            return  allowedupdate.includes(k)
-        })
-        if(!isallowed){
-            return  res.status(500).send("not allowed to change ")
-        }
-        if(data?.skills.length > 10){
-            throw new Error("the number of skills are too much maximum limit is upto 10 ")
-        }
-        
-        
-        const user = await User.findByIdAndUpdate({ _id: userId }, data, {
-            returnDocument: "after",
-            runValidators: true
-        })
-        res.send(user);
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-})
 const PORT = process.env.PORT;
 
 connectdb().then(() => {
